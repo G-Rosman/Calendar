@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <QSystemTrayIcon>
 #include <QDir>
+#include <QDate>
 
 using namespace std;
 
@@ -14,6 +15,7 @@ struct info
 {
     int day = 0;
     int month = 0;
+    int year = 0;
     string str = "";
 };
 
@@ -47,6 +49,7 @@ vector<info> ReadFromFile(char* file)
     {
         in >> one.day;
         in >> one.month;
+        in >> one.year;
         getline(in,one.str);
         telBook.push_back(one);
     }
@@ -76,14 +79,10 @@ bool checkEndOfMonth(DATA d,info inf){
 
 void GetCurrentTime()
 {
-    time_t rawtime;
-    struct tm* timeinfo;
-
-    time(&rawtime);
-    timeinfo = localtime(&rawtime);
-    today.day = timeinfo->tm_mday;
-    today.month =timeinfo->tm_mon + 1;
-    today.year = timeinfo->tm_year;
+    QDate current = QDate::currentDate();
+    today.day = current.day();
+    today.month = current.month();
+    today.year = current.year();
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -94,26 +93,44 @@ MainWindow::MainWindow(QWidget *parent) :
         popUp = new PopUp();
         vector<info>telBook = ReadFromFile("\\Birthday(from).txt");
         GetCurrentTime();
-        string s;
-        string tomorrow;
+        QString s;
+        QString tomorrow;
         QString qstr;
         QString tqstr;
             for (unsigned int i = 0; i < telBook.size(); i++)
             {
                 if (today.day == telBook[i].day && today.month == telBook[i].month)
-                    s+= telBook[i].str + "\n";
+                {
+                    int currentAge = (int)today.year -  (int)telBook[i].year;
+
+                    if (currentAge % 10 == 1 && currentAge % 100 != 11) {
+                            s+= QString::number(currentAge) + QString::fromStdString(" год исполняется") + QString::fromStdString(telBook[i].str) + "\n";
+                        } else if (currentAge % 10 >= 2 && currentAge % 10 <= 4 && (currentAge % 100 < 10 || currentAge % 100 >= 20)) {
+                            s+= QString::number(currentAge) + QString::fromStdString(" года исполняется") + QString::fromStdString(telBook[i].str) + "\n";
+                        } else {
+                            s+= QString::number(currentAge) + QString::fromStdString(" лет исполняется") + QString::fromStdString(telBook[i].str) + "\n";
+                        }
+                }
                 if((today.day+1==telBook[i].day && today.month == telBook[i].month) || checkEndOfMonth(today, telBook[i])){
-                    tomorrow+=telBook[i].str + "\n";
+                    int currentAge = (int)today.year -  (int)telBook[i].year;
+
+                    if (currentAge % 10 == 1 && currentAge % 100 != 11) {
+                            tomorrow += QString::number(currentAge) + QString::fromStdString(" год исполняется") + QString::fromStdString(telBook[i].str) + "\n";
+                        } else if (currentAge % 10 >= 2 && currentAge % 10 <= 4 && (currentAge % 100 < 10 || currentAge % 100 >= 20)) {
+                            tomorrow += QString::number(currentAge) + QString::fromStdString(" года исполняется") + QString::fromStdString(telBook[i].str) + "\n";
+                        } else {
+                            tomorrow += QString::number(currentAge) + QString::fromStdString(" лет исполняется") + QString::fromStdString(telBook[i].str) + "\n";
+                        }
                 }
             }
             if(s!=""){
-                 qstr = QString::fromStdString(s);
+                 qstr = s;
 
             }else{
                  qstr = QString::fromStdString("Отсутствуют");
             }
             if(tomorrow!=""){
-                tqstr = QString::fromStdString(tomorrow);
+                tqstr = tomorrow;
             }else{
                 tqstr = QString::fromStdString("Отсутствуют");
            }
